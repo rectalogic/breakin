@@ -40,18 +40,15 @@ fn setup(
                 if x == 0 && y == 0 && z == 0 {
                     continue;
                 }
-                let shell_level = [
-                    x + 1,                  // distance from left face
-                    y + 1,                  // distance from bottom face
-                    z + 1,                  // distance from back face
-                    (HALF_SIZE as i32) - x, // distance from right face
-                    (HALF_SIZE as i32) - y, // distance from top face
-                    (HALF_SIZE as i32) - z, // distance from front face
-                ]
-                .into_iter()
-                .min()
-                .expect("Not empty")
-                    - 1;
+                let shell_level = HALF_SIZE as i32
+                    - [
+                        x.abs(), // Distance from x=0 plane
+                        y.abs(), // Distance from y=0 plane
+                        z.abs(), // Distance from z=0 plane
+                    ]
+                    .into_iter()
+                    .max()
+                    .expect("Not empty");
                 let material = colors[(shell_level as usize) % colors.len()].clone();
                 commands.spawn((
                     RigidBody::Static,

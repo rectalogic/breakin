@@ -1,3 +1,5 @@
+use std::f32::consts::FRAC_PI_4;
+
 use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 
 use crate::arcball;
@@ -5,28 +7,20 @@ use crate::arcball;
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(arcball::plugin)
         .add_systems(Startup, setup)
-        .add_systems(Update, arcball);
+        .add_systems(Update, move_player);
 }
 
 fn setup(mut commands: Commands) {
     //XXX make these children of the camera, so as we move we shine light at cube
     //XXX also need a collider that covers the "near" plane
-    info!("Setting up player"); //XXX
+
     commands
-        .spawn((
-            arcball::ArcBallController {
-                distance: 17.0,
-                ..default()
-            },
-            Camera3d::default(),
-        ))
+        .spawn((arcball::ArcBallController::new(17.0), Camera3d::default()))
         .with_child(PointLight::default());
 }
 
-//XXX need ArcBall camera
-// https://github.com/roy-t/roy-t.nl/blob/caaf939b776b673b47a5bb5af89233c3adabce79/_posts/2010-02-21-xna-simple-arcballcamera.md#L4
-fn arcball(
-    // mut commands: Commands,
+fn move_player(
+    controller: Single<&mut arcball::ArcBallController>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     mouse_motion: Res<AccumulatedMouseMotion>,
 ) {
@@ -35,6 +29,9 @@ fn arcball(
     }
 
     let delta = mouse_motion.delta;
-    dbg!(delta);
+    if delta != Vec2::ZERO {
+        let mut controller = controller.into_inner();
+        controller.yaw += delta.x * 0.01;
+        controller.pitch += delta.y * 0.01;
+    }
 }
-//XXX need orbit system - use mouse_motion: Res<AccumulatedMouseMotion>, and map 180 degrees to half width/height of viewport?

@@ -15,7 +15,16 @@ pub(super) struct ArcBallController {
     pub yaw: f32,
 }
 
-fn arcball(mut controller_query: Query<(&ArcBallController, Mut<Transform>)>) {
+impl ArcBallController {
+    pub fn new(distance: f32) -> Self {
+        Self {
+            distance,
+            ..default()
+        }
+    }
+}
+
+fn arcball(mut controller_query: Query<(&mut ArcBallController, Mut<Transform>)>) {
     let Ok((controller, mut transform)) = controller_query.get_single_mut() else {
         return;
     };
