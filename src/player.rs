@@ -1,10 +1,8 @@
-use std::f32::consts::{FRAC_PI_4, PI};
+use std::f32::consts::FRAC_PI_4;
 
 use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 
 use crate::arcball;
-
-const PI_2: f32 = 2.0 * PI;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(arcball::plugin)
@@ -36,8 +34,10 @@ fn move_player(
         if let Some(viewport_size) = camera.logical_viewport_size() {
             let viewport_size = viewport_size / 2.0;
             let mut controller = controller.into_inner();
-            controller.yaw = (controller.yaw + (-delta.x / viewport_size.x) * FRAC_PI_4) % PI_2;
-            controller.pitch = (controller.pitch + (delta.y / viewport_size.y) * FRAC_PI_4) % PI_2;
+            let horizontal_angle = (-delta.x / viewport_size.x) * FRAC_PI_4;
+            let vertical_angle = (delta.y / viewport_size.y) * FRAC_PI_4;
+            controller.rotate_around_camera_axis(Vec3::Y, horizontal_angle);
+            controller.rotate_around_camera_axis(Vec3::X, vertical_angle);
         }
     }
 }

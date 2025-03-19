@@ -5,14 +5,14 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(Update, arcball);
 }
 
+// Based on this converted to Quat
 // https://github.com/roy-t/roy-t.nl/blob/master/_posts/2010-02-21-xna-simple-arcballcamera.md
 #[derive(Component, Default, Debug)]
 #[require(Transform)]
 pub(super) struct ArcBallController {
     pub look_at: Vec3,
     pub distance: f32,
-    pub pitch: f32,
-    pub yaw: f32,
+    rotation: Quat,
 }
 
 impl ArcBallController {
@@ -21,6 +21,11 @@ impl ArcBallController {
             distance,
             ..default()
         }
+    }
+
+    pub fn rotate_around_camera_axis(&mut self, axis: Vec3, angle: f32) {
+        let rotation = Quat::from_axis_angle(axis, angle);
+        self.rotation *= rotation;
     }
 }
 
@@ -32,20 +37,12 @@ fn arcball(mut controller_query: Query<(Ref<ArcBallController>, &mut Transform)>
     if !controller.is_changed() {
         return;
     }
-    // Calculate the relative position of the camera
-    let mut position = Transform::from_rotation(Quat::from_euler(
-        EulerRot::YXZ,
-        controller.yaw,
-        controller.pitch,
-        0.0,
-    ))
-    .back()
-    .as_vec3();
+    // Calculate position based on quaternion orientation
+    let forward = controller.rotation * (Vec3::Z * -controller.distance);
 
-    // Convert the relative position to the absolute position
-    position *= -controller.distance;
-    position += controller.look_at;
+    transform.translation = controller.look_at + forward;
 
-    transform.translation = position;
-    transform.look_at(controller.look_at, Vec3::Y);
+    // Set rotation so we look at the target point
+    let up = controller.rotation * Vec3::Y;
+    transform.look_at(controller.look_at, up);
 }
