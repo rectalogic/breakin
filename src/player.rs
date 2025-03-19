@@ -36,8 +36,7 @@ fn move_player(
             let mut controller = controller.into_inner();
             let horizontal_angle = (-delta.x / viewport_size.x) * FRAC_PI_4;
             let vertical_angle = (delta.y / viewport_size.y) * FRAC_PI_4;
-            controller.rotate_around_camera_axis(Vec3::Y, horizontal_angle);
-            controller.rotate_around_camera_axis(Vec3::X, vertical_angle);
+            controller.rotate_xy(vertical_angle, horizontal_angle);
         }
     }
 }

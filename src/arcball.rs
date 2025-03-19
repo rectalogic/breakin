@@ -23,9 +23,8 @@ impl ArcBallController {
         }
     }
 
-    pub fn rotate_around_camera_axis(&mut self, axis: Vec3, angle: f32) {
-        let rotation = Quat::from_axis_angle(axis, angle);
-        self.rotation *= rotation;
+    pub fn rotate_xy(&mut self, x: f32, y: f32) {
+        self.rotation *= Quat::from_axis_angle(Vec3::X, x) * Quat::from_axis_angle(Vec3::Y, y);
     }
 }
 
