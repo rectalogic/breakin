@@ -2,7 +2,9 @@ use std::f32::consts::FRAC_PI_4;
 
 use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 
-use crate::arcball;
+use crate::{arcball, bricks};
+
+const SQRT_3: f32 = 1.73205_f32;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(arcball::plugin)
@@ -14,8 +16,13 @@ fn setup(mut commands: Commands) {
     //XXX make these children of the camera, so as we move we shine light at cube
     //XXX also need a collider that covers the "near" plane
 
+    // Radius of sphere enclosing cube of side N is (N√3)/2
+    let radius = (bricks::CUBE_SIZE as f32 * SQRT_3) / 2.0;
     commands
-        .spawn((arcball::ArcBallController::new(17.0), Camera3d::default()))
+        .spawn((
+            arcball::ArcBallController::new(radius * 2.0),
+            Camera3d::default(),
+        ))
         .with_child(PointLight::default());
 }
 

@@ -6,14 +6,16 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(Startup, setup);
 }
 
+const CUBE_HALF_SIZE: usize = 5;
+pub(super) const CUBE_SIZE: usize = CUBE_HALF_SIZE * 2 + 1;
+
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    const HALF_SIZE: usize = 5;
     // Color of each "shell"
-    let colors: [Handle<StandardMaterial>; HALF_SIZE] = [
+    let colors: [Handle<StandardMaterial>; CUBE_HALF_SIZE] = [
         materials.add(Color::from(basic::AQUA)),
         materials.add(Color::from(basic::LIME)),
         materials.add(Color::from(basic::BLUE)),
@@ -32,7 +34,7 @@ fn setup(
         // materials.add(Color::from(basic::YELLOW)),
     ];
     const SIDE: f32 = 0.99;
-    let size = -(HALF_SIZE as i32)..=HALF_SIZE as i32;
+    let size = -(CUBE_HALF_SIZE as i32)..=CUBE_HALF_SIZE as i32;
     let mesh = meshes.add(Cuboid::new(SIDE, SIDE, SIDE));
     for x in size.clone() {
         for y in size.clone() {
@@ -40,7 +42,7 @@ fn setup(
                 if x == 0 && y == 0 && z == 0 {
                     continue;
                 }
-                let shell_level = HALF_SIZE as i32
+                let shell_level = CUBE_HALF_SIZE as i32
                     - [
                         x.abs(), // Distance from x=0 plane
                         y.abs(), // Distance from y=0 plane
