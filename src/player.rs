@@ -33,10 +33,10 @@ fn move_player(
 
     let delta = mouse_motion.delta;
     if delta != Vec2::ZERO {
-        if let Some(viewport_size) = camera.physical_viewport_size() {
-            let viewport_size = viewport_size.as_vec2() / 2.0;
+        if let Some(viewport_size) = camera.logical_viewport_size() {
+            let viewport_size = viewport_size / 2.0;
             let mut controller = controller.into_inner();
-            controller.yaw = (controller.yaw + (delta.x / viewport_size.x) * FRAC_PI_4) % PI_2;
+            controller.yaw = (controller.yaw + (-delta.x / viewport_size.x) * FRAC_PI_4) % PI_2;
             controller.pitch = (controller.pitch + (delta.y / viewport_size.y) * FRAC_PI_4) % PI_2;
         }
     }
