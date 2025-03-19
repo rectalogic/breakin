@@ -1,8 +1,10 @@
-use std::f32::consts::FRAC_PI_4;
+use std::f32::consts::{FRAC_PI_4, PI};
 
 use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
 
 use crate::arcball;
+
+const PI_2: f32 = 2.0 * PI;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(arcball::plugin)
@@ -20,7 +22,8 @@ fn setup(mut commands: Commands) {
 }
 
 fn move_player(
-    controller: Single<&mut arcball::ArcBallController>,
+    controller: Single<Mut<arcball::ArcBallController>>,
+    camera: Single<&Camera>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     mouse_motion: Res<AccumulatedMouseMotion>,
 ) {
@@ -30,8 +33,11 @@ fn move_player(
 
     let delta = mouse_motion.delta;
     if delta != Vec2::ZERO {
-        let mut controller = controller.into_inner();
-        controller.yaw += delta.x * 0.01;
-        controller.pitch += delta.y * 0.01;
+        if let Some(viewport_size) = camera.physical_viewport_size() {
+            let viewport_size = viewport_size.as_vec2() / 2.0;
+            let mut controller = controller.into_inner();
+            controller.yaw = (controller.yaw + (delta.x / viewport_size.x) * FRAC_PI_4) % PI_2;
+            controller.pitch = (controller.pitch + (delta.y / viewport_size.y) * FRAC_PI_4) % PI_2;
+        }
     }
 }
