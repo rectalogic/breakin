@@ -2,12 +2,12 @@ use avian3d::prelude::*;
 use bevy::color::palettes::basic;
 use bevy::prelude::*;
 
-use crate::{app, bricks};
+use crate::{app, bricks, player};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(Startup, setup)
         .add_systems(OnEnter(app::AppState::Breaking), fire_ball)
-        .add_systems(Update, update.run_if(in_state(app::AppState::Breaking)));
+        .add_systems(PostUpdate, update.run_if(in_state(app::AppState::Breaking)));
 }
 
 pub(super) const BALL_RADIUS: f32 = bricks::INNER_CUBE_SIZE / 4.0;
@@ -34,14 +34,17 @@ fn setup(
     next_state.set(app::AppState::Ready);
 }
 
-fn fire_ball(mut commands: Commands, ball: Single<(Entity, &Transform), With<Ball>>) {
+fn fire_ball(mut commands: Commands, ball: Single<(Entity, &GlobalTransform), With<Ball>>) {
     let (ball_entity, ball_transform) = ball.into_inner();
     commands
         .entity(ball_entity)
+        // This happens in PostUpdae, so we have to use GlobalTransform below
         .remove_parent_in_place()
         .insert((
             RigidBody::Dynamic,
-            ExternalForce::new(ball_transform.rotation * Vec3::Z).with_persistence(false),
+            //XXX this seems wrong when we are rotated
+            ExternalImpulse::new(ball_transform.compute_transform().rotation * (Vec3::Z * 0.5))
+                .with_persistence(false),
         ));
 }
 
@@ -51,16 +54,8 @@ fn update(
     mut next_state: ResMut<NextState<app::AppState>>,
 ) {
     let (ball_entity, ball_transform) = ball.into_inner();
-    dbg!(ball_transform.translation); //XXX
-    if false {
-        commands
-            .entity(ball_entity)
-            .insert(RigidBody::Static)
-            .remove::<ExternalForce>();
+    if ball_transform.translation.distance(Vec3::ZERO) > player::PLAYFIELD_RADIUS {
+        commands.entity(ball_entity).insert(RigidBody::Static);
         next_state.set(app::AppState::Ready);
     }
 }
-
-//XXX run Update if in state Breaking - if we go out of bounds, set state back to Ready
-//XXX in ball, we should switch back to Static and no Velocity
-//XXX in player, we should reparent to paddle (already handled)

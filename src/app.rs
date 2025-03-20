@@ -1,5 +1,5 @@
 use crate::{ball, bricks, player};
-use avian3d::PhysicsPlugins;
+use avian3d::prelude::*;
 use bevy::{DefaultPlugins, app::App, prelude::*};
 
 pub fn plugin(app: &mut App) {
@@ -10,6 +10,7 @@ pub fn plugin(app: &mut App) {
         player::plugin,
         ball::plugin,
     ))
+    .insert_resource(Gravity(Vec3::ZERO))
     .insert_state(AppState::Init);
 }
 

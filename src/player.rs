@@ -10,6 +10,9 @@ use crate::{app, arcball, ball, bricks};
 
 const SQRT_3: f32 = 1.73205_f32;
 const PADDLE_Z_LENGTH: f32 = 1.0;
+// Radius of sphere enclosing cube of side N is (N√3)/2
+const ENCLOSING_RADIUS: f32 = (bricks::CUBE_SIZE as f32 * SQRT_3) / 2.0;
+pub(super) const PLAYFIELD_RADIUS: f32 = ENCLOSING_RADIUS * 2.0;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins((WireframePlugin, arcball::plugin))
@@ -32,14 +35,12 @@ struct Player;
 struct Paddle;
 
 fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
-    // Radius of sphere enclosing cube of side N is (N√3)/2
-    let enclosing_radius = (bricks::CUBE_SIZE as f32 * SQRT_3) / 2.0;
     let projection = PerspectiveProjection::default();
     let near = projection.near;
     commands
         .spawn((
             Player,
-            arcball::ArcBallController::new(enclosing_radius * 2.0),
+            arcball::ArcBallController::new(PLAYFIELD_RADIUS),
             Camera3d::default(),
             Projection::Perspective(projection),
         ))
