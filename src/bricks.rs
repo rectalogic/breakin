@@ -8,6 +8,10 @@ pub(super) fn plugin(app: &mut App) {
 
 const CUBE_HALF_SIZE: usize = 5;
 pub(super) const CUBE_SIZE: usize = CUBE_HALF_SIZE * 2 + 1;
+pub(super) const INNER_CUBE_SIZE: f32 = 1.0;
+
+#[derive(Component)]
+struct Brick;
 
 fn setup(
     mut commands: Commands,
@@ -27,13 +31,13 @@ fn setup(
         // materials.add(Color::from(basic::NAVY)),
         // materials.add(Color::from(basic::OLIVE)),
         // materials.add(Color::from(basic::PURPLE)),
-        // materials.add(Color::from(basic::RED)),
+        // XXX materials.add(Color::from(basic::RED)),
         // materials.add(Color::from(basic::SILVER)),
         // materials.add(Color::from(basic::TEAL)),
         // materials.add(Color::from(basic::WHITE)),
         // materials.add(Color::from(basic::YELLOW)),
     ];
-    const SIDE: f32 = 0.99;
+    const SIDE: f32 = INNER_CUBE_SIZE - 0.01;
     let size = -(CUBE_HALF_SIZE as i32)..=CUBE_HALF_SIZE as i32;
     let mesh = meshes.add(Cuboid::new(SIDE, SIDE, SIDE));
     for x in size.clone() {
@@ -53,6 +57,7 @@ fn setup(
                     .expect("Not empty");
                 let material = colors[(shell_level as usize) % colors.len()].clone();
                 commands.spawn((
+                    Brick,
                     RigidBody::Static,
                     Mesh3d(mesh.clone()),
                     MeshMaterial3d(material),

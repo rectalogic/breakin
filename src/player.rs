@@ -1,34 +1,69 @@
+use avian3d::prelude::*;
+use bevy::{
+    input::{common_conditions::input_just_pressed, mouse::AccumulatedMouseMotion},
+    pbr::wireframe::{Wireframe, WireframePlugin},
+    prelude::*,
+};
 use std::f32::consts::FRAC_PI_4;
 
-use bevy::{input::mouse::AccumulatedMouseMotion, prelude::*};
-
-use crate::{arcball, bricks};
+use crate::{app, arcball, ball, bricks};
 
 const SQRT_3: f32 = 1.73205_f32;
+const PADDLE_Z_LENGTH: f32 = 1.0;
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_plugins(arcball::plugin)
+    app.add_plugins((WireframePlugin, arcball::plugin))
         .add_systems(Startup, setup)
-        .add_systems(Update, move_player);
+        .add_systems(
+            Update,
+            (
+                move_player,
+                fire_ball
+                    .run_if(input_just_pressed(KeyCode::Space).and(in_state(app::AppState::Ready))),
+            ),
+        )
+        .add_systems(OnEnter(app::AppState::Ready), stage_ball);
 }
 
-fn setup(mut commands: Commands) {
-    //XXX make these children of the camera, so as we move we shine light at cube
-    //XXX also need a collider that covers the "near" plane
+#[derive(Component)]
+struct Player;
 
+#[derive(Component)]
+struct Paddle;
+
+fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     // Radius of sphere enclosing cube of side N is (N√3)/2
-    let radius = (bricks::CUBE_SIZE as f32 * SQRT_3) / 2.0;
+    let enclosing_radius = (bricks::CUBE_SIZE as f32 * SQRT_3) / 2.0;
+    let projection = PerspectiveProjection::default();
+    let near = projection.near;
     commands
         .spawn((
-            arcball::ArcBallController::new(radius * 2.0),
+            Player,
+            arcball::ArcBallController::new(enclosing_radius * 2.0),
             Camera3d::default(),
+            Projection::Perspective(projection),
         ))
-        .with_child(PointLight::default());
+        .with_children(|parent| {
+            parent.spawn(PointLight::default());
+            parent.spawn((
+                Paddle,
+                RigidBody::Kinematic,
+                Restitution::new(1.0),
+                Collider::cuboid(ball::BALL_RADIUS, ball::BALL_RADIUS, PADDLE_Z_LENGTH),
+                Wireframe,
+                Mesh3d(meshes.add(Cuboid::new(
+                    ball::BALL_RADIUS,
+                    ball::BALL_RADIUS,
+                    PADDLE_Z_LENGTH,
+                ))),
+                Transform::from_xyz(0.0, 0.0, -(near + ball::BALL_RADIUS * 4.0)),
+            ));
+        });
 }
 
 fn move_player(
     controller: Single<Mut<arcball::ArcBallController>>,
-    camera: Single<&Camera>,
+    camera: Single<&Camera, With<Player>>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     mouse_motion: Res<AccumulatedMouseMotion>,
 ) {
@@ -46,4 +81,19 @@ fn move_player(
             controller.rotate_xy(vertical_angle, horizontal_angle);
         }
     }
+}
+
+fn stage_ball(
+    mut commands: Commands,
+    ball: Single<(Entity, &mut Transform), With<ball::Ball>>,
+    paddle: Single<Entity, With<Paddle>>,
+) {
+    let (ball_entity, mut ball_transform) = ball.into_inner();
+    let paddle_entity = paddle.into_inner();
+    commands.entity(paddle_entity).add_child(ball_entity);
+    *ball_transform = Transform::from_xyz(0.0, 0.0, -PADDLE_Z_LENGTH / 2.0);
+}
+
+fn fire_ball(mut next_state: ResMut<NextState<app::AppState>>) {
+    next_state.set(app::AppState::Breaking);
 }
