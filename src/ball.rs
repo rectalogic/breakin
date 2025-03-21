@@ -2,12 +2,12 @@ use avian3d::prelude::*;
 use bevy::color::palettes::basic;
 use bevy::prelude::*;
 
-use crate::{GameLayer, app, bricks, player};
+use crate::{app, bricks, player};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(Startup, setup)
-        .add_systems(OnEnter(app::AppState::Breaking), fire_ball)
-        .add_systems(PostUpdate, update.run_if(in_state(app::AppState::Breaking)));
+        .add_systems(OnEnter(app::AppState::PlayBall), fire_ball)
+        .add_systems(PostUpdate, update.run_if(in_state(app::AppState::PlayBall)));
 }
 
 pub(super) const BALL_RADIUS: f32 = bricks::INNER_CUBE_SIZE / 4.0;
@@ -30,9 +30,12 @@ fn setup(
         MeshMaterial3d(materials.add(Color::from(basic::RED))),
         Transform::default(),
         Collider::sphere(BALL_RADIUS),
-        CollisionLayers::new(GameLayer::Ball, [GameLayer::Brick, GameLayer::Paddle]),
+        CollisionLayers::new(
+            app::GameLayer::Ball,
+            [app::GameLayer::Brick, app::GameLayer::Paddle],
+        ),
     ));
-    next_state.set(app::AppState::Ready);
+    next_state.set(app::AppState::ReadyBall);
 }
 
 fn fire_ball(mut commands: Commands, ball: Single<(Entity, &GlobalTransform), With<Ball>>) {
@@ -55,6 +58,6 @@ fn update(
     let (ball_entity, ball_transform) = ball.into_inner();
     if ball_transform.translation.distance(Vec3::ZERO) > player::PLAYFIELD_RADIUS {
         commands.entity(ball_entity).insert(RigidBody::Kinematic);
-        next_state.set(app::AppState::Ready);
+        next_state.set(app::AppState::ReadyBall);
     }
 }

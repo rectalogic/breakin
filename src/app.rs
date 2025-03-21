@@ -17,6 +17,15 @@ pub fn plugin(app: &mut App) {
 #[derive(States, Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub(super) enum AppState {
     Init,
-    Ready,
-    Breaking,
+    ReadyBall,
+    PlayBall,
+}
+
+#[derive(PhysicsLayer, Default)]
+pub(super) enum GameLayer {
+    #[default]
+    Default,
+    Brick,
+    Ball,
+    Paddle,
 }

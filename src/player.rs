@@ -6,7 +6,7 @@ use bevy::{
 };
 use std::f32::consts::FRAC_PI_4;
 
-use crate::{GameLayer, app, arcball, ball, bricks};
+use crate::{app, arcball, ball, bricks};
 
 const SQRT_3: f32 = 1.73205_f32;
 const PADDLE_Z_LENGTH: f32 = 1.0;
@@ -21,11 +21,12 @@ pub(super) fn plugin(app: &mut App) {
             Update,
             (
                 move_player,
-                fire_ball
-                    .run_if(input_just_pressed(KeyCode::Space).and(in_state(app::AppState::Ready))),
+                fire_ball.run_if(
+                    input_just_pressed(KeyCode::Space).and(in_state(app::AppState::ReadyBall)),
+                ),
             ),
         )
-        .add_systems(OnEnter(app::AppState::Ready), stage_ball);
+        .add_systems(OnEnter(app::AppState::ReadyBall), stage_ball);
 }
 
 #[derive(Component)]
@@ -51,7 +52,7 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
                 RigidBody::Kinematic,
                 Restitution::new(1.0),
                 Collider::cuboid(ball::BALL_RADIUS, ball::BALL_RADIUS, PADDLE_Z_LENGTH),
-                CollisionLayers::new(GameLayer::Paddle, [GameLayer::Ball]),
+                CollisionLayers::new(app::GameLayer::Paddle, [app::GameLayer::Ball]),
                 Wireframe,
                 Mesh3d(meshes.add(Cuboid::new(
                     ball::BALL_RADIUS,
@@ -97,5 +98,5 @@ fn stage_ball(
 }
 
 fn fire_ball(mut next_state: ResMut<NextState<app::AppState>>) {
-    next_state.set(app::AppState::Breaking);
+    next_state.set(app::AppState::PlayBall);
 }
