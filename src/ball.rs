@@ -42,9 +42,7 @@ fn fire_ball(mut commands: Commands, ball: Single<(Entity, &GlobalTransform), Wi
         .remove_parent_in_place()
         .insert((
             RigidBody::Dynamic,
-            //XXX this seems wrong when we are rotated
-            ExternalImpulse::new(ball_transform.compute_transform().rotation * (Vec3::Z * 0.5))
-                .with_persistence(false),
+            ExternalImpulse::new(ball_transform.forward() * 0.5).with_persistence(false),
         ));
 }
 
