@@ -52,6 +52,7 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     commands
         .spawn((
             Player,
+            RigidBody::Kinematic,
             arcball::ArcBallController::new(PLAYFIELD_RADIUS),
             Camera3d::default(),
             Projection::Perspective(projection),
@@ -60,7 +61,6 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
             parent.spawn(PointLight::default());
             parent.spawn((
                 Paddle,
-                RigidBody::Kinematic,
                 Restitution::new(1.0),
                 Collider::cuboid(ball::BALL_RADIUS, ball::BALL_RADIUS, PADDLE_Z_LENGTH),
                 CollisionLayers::new(app::GameLayer::Paddle, [app::GameLayer::Ball]),
