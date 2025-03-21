@@ -18,6 +18,13 @@ pub(super) fn plugin(app: &mut App) {
     app.add_plugins((WireframePlugin, arcball::plugin))
         .add_systems(Startup, setup)
         .add_systems(
+            OnTransition {
+                exited: app::AppState::Init,
+                entered: app::AppState::ReadyBall,
+            },
+            create_ball_placeholder,
+        )
+        .add_systems(
             Update,
             (
                 move_player,
@@ -34,6 +41,10 @@ struct Player;
 
 #[derive(Component)]
 struct Paddle;
+
+#[derive(Component)]
+#[require(Transform)]
+pub(super) struct BallPlaceholder;
 
 fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
     let projection = PerspectiveProjection::default();
@@ -64,6 +75,24 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
         });
 }
 
+fn create_ball_placeholder(
+    mut commands: Commands,
+    ball_resource: Res<ball::BallResource>,
+    paddle: Single<Entity, With<Paddle>>,
+) {
+    let ball_entity = commands
+        .spawn((
+            BallPlaceholder,
+            Visibility::Visible,
+            Mesh3d(ball_resource.mesh.clone()),
+            MeshMaterial3d(ball_resource.material.clone()),
+            Transform::from_xyz(0.0, 0.0, -PADDLE_Z_LENGTH / 1.9),
+        ))
+        .id();
+    let paddle_entity = paddle.into_inner();
+    commands.entity(paddle_entity).add_child(ball_entity);
+}
+
 fn move_player(
     controller: Single<Mut<arcball::ArcBallController>>,
     camera: Single<&Camera, With<Player>>,
@@ -86,15 +115,9 @@ fn move_player(
     }
 }
 
-fn stage_ball(
-    mut commands: Commands,
-    ball: Single<(Entity, &mut Transform), With<ball::Ball>>,
-    paddle: Single<Entity, With<Paddle>>,
-) {
-    let (ball_entity, mut ball_transform) = ball.into_inner();
-    let paddle_entity = paddle.into_inner();
-    commands.entity(paddle_entity).add_child(ball_entity);
-    *ball_transform = Transform::from_xyz(0.0, 0.0, -PADDLE_Z_LENGTH / 2.0);
+fn stage_ball(mut commands: Commands, ball: Single<Entity, With<BallPlaceholder>>) {
+    let ball_entity = ball.into_inner();
+    commands.entity(ball_entity).insert(Visibility::Visible);
 }
 
 fn fire_ball(mut next_state: ResMut<NextState<app::AppState>>) {
