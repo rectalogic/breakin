@@ -6,7 +6,7 @@ use bevy::{
 };
 use std::f32::consts::FRAC_PI_4;
 
-use crate::{app, arcball, ball, bricks};
+use crate::{GameLayer, app, arcball, ball, bricks};
 
 const SQRT_3: f32 = 1.73205_f32;
 const PADDLE_Z_LENGTH: f32 = 1.0;
@@ -51,6 +51,7 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
                 RigidBody::Kinematic,
                 Restitution::new(1.0),
                 Collider::cuboid(ball::BALL_RADIUS, ball::BALL_RADIUS, PADDLE_Z_LENGTH),
+                CollisionLayers::new(GameLayer::Paddle, [GameLayer::Ball]),
                 Wireframe,
                 Mesh3d(meshes.add(Cuboid::new(
                     ball::BALL_RADIUS,

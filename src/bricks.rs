@@ -2,6 +2,8 @@ use avian3d::prelude::*;
 use bevy::color::palettes::basic;
 use bevy::prelude::*;
 
+use crate::GameLayer;
+
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(Startup, setup);
 }
@@ -63,6 +65,8 @@ fn setup(
                     MeshMaterial3d(material),
                     Transform::from_xyz(x as f32, y as f32, z as f32),
                     Collider::cuboid(SIDE, SIDE, SIDE),
+                    Restitution::new(1.0),
+                    CollisionLayers::new(GameLayer::Brick, [GameLayer::Ball]),
                 ));
             }
         }

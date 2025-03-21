@@ -2,7 +2,7 @@ use avian3d::prelude::*;
 use bevy::color::palettes::basic;
 use bevy::prelude::*;
 
-use crate::{app, bricks, player};
+use crate::{GameLayer, app, bricks, player};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(Startup, setup)
@@ -24,12 +24,13 @@ fn setup(
 ) {
     commands.spawn((
         Ball,
-        RigidBody::Static,
-        Restitution::new(0.8),
+        RigidBody::Kinematic,
+        Restitution::new(1.0),
         Mesh3d(meshes.add(Sphere::new(BALL_RADIUS).mesh().ico(4).unwrap())),
         MeshMaterial3d(materials.add(Color::from(basic::RED))),
         Transform::default(),
         Collider::sphere(BALL_RADIUS),
+        CollisionLayers::new(GameLayer::Ball, [GameLayer::Brick, GameLayer::Paddle]),
     ));
     next_state.set(app::AppState::Ready);
 }
@@ -53,7 +54,7 @@ fn update(
 ) {
     let (ball_entity, ball_transform) = ball.into_inner();
     if ball_transform.translation.distance(Vec3::ZERO) > player::PLAYFIELD_RADIUS {
-        commands.entity(ball_entity).insert(RigidBody::Static);
+        commands.entity(ball_entity).insert(RigidBody::Kinematic);
         next_state.set(app::AppState::Ready);
     }
 }
