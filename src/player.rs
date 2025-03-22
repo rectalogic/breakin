@@ -45,6 +45,9 @@ struct Player;
 struct Paddle;
 
 #[derive(Component)]
+struct PaddleHolder;
+
+#[derive(Component)]
 #[require(Transform)]
 pub(super) struct BallPlaceholder;
 
@@ -59,20 +62,24 @@ fn setup(mut commands: Commands) {
         ))
         .with_children(|parent| {
             parent.spawn(PointLight::default());
-            parent.spawn((
-                Paddle,
-                Restitution::new(1.0),
-                Collider::cuboid(1.0, 1.0, PADDLE_Z_LENGTH),
-                CollisionLayers::new(app::GameLayer::Paddle, [app::GameLayer::Ball]),
-                Transform::default(),
-            ));
+            parent
+                .spawn((PaddleHolder, Visibility::Inherited, Transform::default()))
+                .with_children(|parent| {
+                    parent.spawn((
+                        Paddle,
+                        Restitution::new(1.0),
+                        Collider::cuboid(1.0, 1.0, PADDLE_Z_LENGTH),
+                        CollisionLayers::new(app::GameLayer::Paddle, [app::GameLayer::Ball]),
+                        Transform::default(),
+                    ));
+                });
         });
 }
 
 fn on_resize(
-    mut commands: Commands,
     projection: Single<&Projection, With<Player>>,
-    paddle: Single<(Entity, &mut Transform), With<Paddle>>,
+    paddle_holder: Single<&mut Transform, With<PaddleHolder>>,
+    paddle: Single<&mut Transform, (With<Paddle>, Without<PaddleHolder>)>,
     mut resize_reader: EventReader<WindowResized>,
 ) {
     if resize_reader.read().last().is_some() {
@@ -83,23 +90,20 @@ fn on_resize(
         } + ball::BALL_RADIUS * 4.0;
         let corners = projection.get_frustum_corners(near, near + PADDLE_Z_LENGTH);
         // bottom right - bottom left
-        let x_length = corners[0].x - corners[3].x;
+        let x_scale = corners[0].x - corners[3].x;
         // top right - bottom left
-        let y_length = corners[1].y - corners[3].y;
-        let (paddle_entity, mut paddle_transform) = paddle.into_inner();
-        paddle_transform.translation = Vec3::new(0.0, 0.0, -(near + PADDLE_Z_LENGTH / 2.0));
-        commands.entity(paddle_entity).insert(Collider::cuboid(
-            x_length,
-            y_length,
-            PADDLE_Z_LENGTH,
-        ));
+        let y_scale = corners[1].y - corners[3].y;
+        let mut paddle_transform = paddle.into_inner();
+        paddle_transform.scale = Vec3::new(x_scale, y_scale, 1.0);
+        let mut paddle_holder_transform = paddle_holder.into_inner();
+        paddle_holder_transform.translation = Vec3::new(0.0, 0.0, -(near + PADDLE_Z_LENGTH / 2.0));
     }
 }
 
 fn create_ball_placeholder(
     mut commands: Commands,
     ball_resource: Res<ball::BallResource>,
-    paddle: Single<Entity, With<Paddle>>,
+    paddle_holder: Single<Entity, With<PaddleHolder>>,
 ) {
     let ball_entity = commands
         .spawn((
@@ -110,8 +114,8 @@ fn create_ball_placeholder(
             Transform::from_xyz(0.0, 0.0, -PADDLE_Z_LENGTH / 1.9),
         ))
         .id();
-    let paddle_entity = paddle.into_inner();
-    commands.entity(paddle_entity).add_child(ball_entity);
+    let paddle_holder_entity = paddle_holder.into_inner();
+    commands.entity(paddle_holder_entity).add_child(ball_entity);
 }
 
 fn move_player(
