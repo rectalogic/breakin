@@ -54,7 +54,7 @@ fn fire_ball(
             [app::GameLayer::Brick, app::GameLayer::Paddle],
         ),
         ball_placeholder_transform,
-        ExternalImpulse::new(ball_placeholder_transform.forward() * 0.5).with_persistence(false),
+        ExternalImpulse::new(ball_placeholder_transform.forward() * 0.3).with_persistence(false),
     ));
     commands
         .entity(ball_placeholder_entity)

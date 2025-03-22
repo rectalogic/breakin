@@ -10,6 +10,7 @@ use crate::{app, arcball, ball, bricks};
 
 const SQRT_3: f32 = 1.73205_f32;
 const PADDLE_Z_LENGTH: f32 = 1.0;
+const PADDLE_SIZE: f32 = ball::BALL_RADIUS * 1.5;
 // Radius of sphere enclosing cube of side N is (N√3)/2
 const ENCLOSING_RADIUS: f32 = (bricks::CUBE_SIZE as f32 * SQRT_3) / 2.0;
 pub(super) const PLAYFIELD_RADIUS: f32 = ENCLOSING_RADIUS * 2.0;
@@ -62,14 +63,10 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>) {
             parent.spawn((
                 Paddle,
                 Restitution::new(1.0),
-                Collider::cuboid(ball::BALL_RADIUS, ball::BALL_RADIUS, PADDLE_Z_LENGTH),
+                Collider::cuboid(PADDLE_SIZE, PADDLE_SIZE, PADDLE_Z_LENGTH),
                 CollisionLayers::new(app::GameLayer::Paddle, [app::GameLayer::Ball]),
                 Wireframe,
-                Mesh3d(meshes.add(Cuboid::new(
-                    ball::BALL_RADIUS,
-                    ball::BALL_RADIUS,
-                    PADDLE_Z_LENGTH,
-                ))),
+                Mesh3d(meshes.add(Cuboid::new(PADDLE_SIZE, PADDLE_SIZE, PADDLE_Z_LENGTH))),
                 Transform::from_xyz(0.0, 0.0, -(near + ball::BALL_RADIUS * 4.0)),
             ));
         });
