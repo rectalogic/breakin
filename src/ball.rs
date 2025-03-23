@@ -7,6 +7,8 @@ use crate::{app, bricks, player};
 pub(super) fn plugin(app: &mut App) {
     app.insert_resource(BallResource::default())
         .add_systems(Startup, setup)
+        // PostStartup because we need player::PaddleHolder to exist first
+        .add_systems(PostStartup, setup_ball_placeholder)
         .add_systems(OnEnter(app::AppState::PlayBall), fire_ball)
         .add_systems(Update, update.run_if(in_state(app::AppState::PlayBall)));
 }
@@ -16,6 +18,10 @@ pub(super) const BALL_RADIUS: f32 = bricks::INNER_CUBE_SIZE / 4.0;
 #[derive(Component)]
 #[require(Transform)]
 pub(super) struct Ball;
+
+#[derive(Component)]
+#[require(Transform)]
+pub(super) struct BallPlaceholder;
 
 #[derive(Resource, Default)]
 pub(super) struct BallResource {
@@ -35,9 +41,27 @@ fn setup(
     next_state.set(app::AppState::ReadyBall);
 }
 
+fn setup_ball_placeholder(
+    mut commands: Commands,
+    ball_resource: Res<BallResource>,
+    paddle_holder: Single<Entity, With<player::PaddleHolder>>,
+) {
+    let ball_entity = commands
+        .spawn((
+            BallPlaceholder,
+            Visibility::Visible,
+            Mesh3d(ball_resource.mesh.clone()),
+            MeshMaterial3d(ball_resource.material.clone()),
+            Transform::from_xyz(0.0, 0.0, -player::PADDLE_Z_LENGTH / 1.9),
+        ))
+        .id();
+    let paddle_holder_entity = paddle_holder.into_inner();
+    commands.entity(paddle_holder_entity).add_child(ball_entity);
+}
+
 fn fire_ball(
     mut commands: Commands,
-    ball_placeholder: Single<(Entity, &GlobalTransform), With<player::BallPlaceholder>>,
+    ball_placeholder: Single<(Entity, &GlobalTransform), With<BallPlaceholder>>,
     ball_resource: Res<BallResource>,
 ) {
     let (ball_placeholder_entity, ball_placeholder_transform) = ball_placeholder.into_inner();

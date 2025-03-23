@@ -10,7 +10,7 @@ use std::f32::consts::FRAC_PI_4;
 use crate::{app, arcball, ball, bricks};
 
 const SQRT_3: f32 = 1.73205_f32;
-const PADDLE_Z_LENGTH: f32 = 1.0;
+pub(super) const PADDLE_Z_LENGTH: f32 = 1.0;
 // Radius of sphere enclosing cube of side N is (N√3)/2
 const ENCLOSING_RADIUS: f32 = (bricks::CUBE_SIZE as f32 * SQRT_3) / 2.0;
 pub(super) const PLAYFIELD_RADIUS: f32 = ENCLOSING_RADIUS * 2.0;
@@ -18,13 +18,6 @@ pub(super) const PLAYFIELD_RADIUS: f32 = ENCLOSING_RADIUS * 2.0;
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(arcball::plugin)
         .add_systems(Startup, setup)
-        .add_systems(
-            OnTransition {
-                exited: app::AppState::Init,
-                entered: app::AppState::ReadyBall,
-            },
-            create_ball_placeholder,
-        )
         .add_systems(
             Update,
             (
@@ -45,11 +38,7 @@ struct Player;
 struct Paddle;
 
 #[derive(Component)]
-struct PaddleHolder;
-
-#[derive(Component)]
-#[require(Transform)]
-pub(super) struct BallPlaceholder;
+pub(super) struct PaddleHolder;
 
 fn setup(mut commands: Commands) {
     commands
@@ -100,24 +89,6 @@ fn on_resize(
     }
 }
 
-fn create_ball_placeholder(
-    mut commands: Commands,
-    ball_resource: Res<ball::BallResource>,
-    paddle_holder: Single<Entity, With<PaddleHolder>>,
-) {
-    let ball_entity = commands
-        .spawn((
-            BallPlaceholder,
-            Visibility::Visible,
-            Mesh3d(ball_resource.mesh.clone()),
-            MeshMaterial3d(ball_resource.material.clone()),
-            Transform::from_xyz(0.0, 0.0, -PADDLE_Z_LENGTH / 1.9),
-        ))
-        .id();
-    let paddle_holder_entity = paddle_holder.into_inner();
-    commands.entity(paddle_holder_entity).add_child(ball_entity);
-}
-
 fn move_player(
     controller: Single<Mut<arcball::ArcBallController>>,
     camera: Single<&Camera, With<Player>>,
@@ -140,7 +111,7 @@ fn move_player(
     }
 }
 
-fn stage_ball(mut commands: Commands, ball: Single<Entity, With<BallPlaceholder>>) {
+fn stage_ball(mut commands: Commands, ball: Single<Entity, With<ball::BallPlaceholder>>) {
     let ball_entity = ball.into_inner();
     commands.entity(ball_entity).insert(Visibility::Visible);
 }
