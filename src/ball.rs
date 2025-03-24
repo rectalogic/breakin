@@ -10,7 +10,10 @@ pub(super) fn plugin(app: &mut App) {
         // PostStartup because we need player::PaddleHolder to exist first
         .add_systems(PostStartup, setup_ball_placeholder)
         .add_systems(OnEnter(app::AppState::PlayBall), fire_ball)
-        .add_systems(Update, update.run_if(in_state(app::AppState::PlayBall)));
+        .add_systems(
+            Update,
+            (handle_ball_oob, handle_ball_collision).run_if(in_state(app::AppState::PlayBall)),
+        );
 }
 
 pub(super) const BALL_RADIUS: f32 = bricks::INNER_CUBE_SIZE / 4.0;
@@ -85,7 +88,7 @@ fn fire_ball(
         .insert(Visibility::Hidden);
 }
 
-fn update(
+fn handle_ball_oob(
     mut commands: Commands,
     ball: Single<(Entity, &Transform), With<Ball>>,
     mut next_state: ResMut<NextState<app::AppState>>,
@@ -94,5 +97,27 @@ fn update(
     if ball_transform.translation.distance(Vec3::ZERO) > player::PLAYFIELD_RADIUS {
         commands.entity(ball_entity).despawn();
         next_state.set(app::AppState::ReadyBall);
+    }
+}
+
+fn handle_ball_collision(
+    mut commands: Commands,
+    mut collisions: EventReader<Collision>,
+    ball: Query<Entity, With<Ball>>,
+    paddle: Single<Entity, With<player::Paddle>>,
+) {
+    if let Ok(ball_entity) = ball.get_single() {
+        let paddle_entity = paddle.into_inner();
+        for Collision(contact) in collisions.read() {
+            if !contact.collision_started() {
+                continue;
+            }
+            if contact.entity1 != ball_entity && contact.entity1 != paddle_entity {
+                commands.entity(contact.entity1).despawn();
+            }
+            if contact.entity2 != ball_entity && contact.entity2 != paddle_entity {
+                commands.entity(contact.entity2).despawn();
+            }
+        }
     }
 }

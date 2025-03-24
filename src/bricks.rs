@@ -2,10 +2,10 @@ use avian3d::prelude::*;
 use bevy::color::palettes::basic;
 use bevy::prelude::*;
 
-use crate::{app, ball, player};
+use crate::app;
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_systems(Startup, setup).add_systems(Update, update);
+    app.add_systems(Startup, setup);
 }
 
 const CUBE_HALF_SIZE: usize = 5;
@@ -68,25 +68,6 @@ fn setup(
                     Restitution::new(1.0),
                     CollisionLayers::new(app::GameLayer::Brick, [app::GameLayer::Ball]),
                 ));
-            }
-        }
-    }
-}
-
-fn update(
-    mut commands: Commands,
-    collisions: Res<Collisions>,
-    ball: Query<Entity, With<ball::Ball>>,
-    paddle: Single<Entity, With<player::Paddle>>,
-) {
-    if let Ok(ball_entity) = ball.get_single() {
-        let paddle_entity = paddle.into_inner();
-        for contact in collisions.collisions_with_entity(ball_entity) {
-            if contact.entity1 != ball_entity && contact.entity1 != paddle_entity {
-                commands.entity(contact.entity1).despawn();
-            }
-            if contact.entity2 != ball_entity && contact.entity2 != paddle_entity {
-                commands.entity(contact.entity2).despawn();
             }
         }
     }
