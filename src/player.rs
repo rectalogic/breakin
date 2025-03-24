@@ -44,18 +44,19 @@ fn setup(mut commands: Commands) {
     commands
         .spawn((
             Player,
+            Name::new("Player"),
             RigidBody::Kinematic,
             arcball::ArcBallController::new(PLAYFIELD_RADIUS),
             Camera3d::default(),
             Projection::Perspective(PerspectiveProjection::default()),
         ))
         .with_children(|parent| {
-            parent.spawn(PointLight::default());
             parent
                 .spawn((PaddleHolder, Visibility::Inherited, Transform::default()))
                 .with_children(|parent| {
                     parent.spawn((
                         Paddle,
+                        Name::new("Paddle"),
                         Restitution::new(1.0),
                         Collider::cuboid(1.0, 1.0, PADDLE_Z_LENGTH),
                         CollisionLayers::new(app::GameLayer::Paddle, [app::GameLayer::Ball]),

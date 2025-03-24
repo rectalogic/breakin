@@ -20,6 +20,29 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    const CORNER: f32 = 1.5 * INNER_CUBE_SIZE * (CUBE_HALF_SIZE as f32);
+    commands.spawn((
+        PointLight {
+            shadows_enabled: true,
+            ..default()
+        },
+        Transform::from_xyz(CORNER, CORNER, -CORNER),
+    ));
+    commands.spawn((
+        PointLight {
+            shadows_enabled: true,
+            ..default()
+        },
+        Transform::from_xyz(-CORNER, -CORNER, CORNER),
+    ));
+    commands.spawn((
+        PointLight {
+            intensity: 50_000.0,
+            ..default()
+        },
+        Transform::default(),
+    ));
+
     // Color of each "shell"
     let colors: [Handle<StandardMaterial>; CUBE_HALF_SIZE] = [
         materials.add(Color::from(basic::AQUA)),

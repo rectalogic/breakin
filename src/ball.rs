@@ -52,6 +52,7 @@ fn setup_ball_placeholder(
     let ball_entity = commands
         .spawn((
             BallPlaceholder,
+            Name::new("BallPlaceholder"),
             Visibility::Visible,
             Mesh3d(ball_resource.mesh.clone()),
             MeshMaterial3d(ball_resource.material.clone()),
@@ -71,6 +72,7 @@ fn fire_ball(
     let ball_placeholder_transform = ball_placeholder_transform.compute_transform();
     commands.spawn((
         Ball,
+        Name::new("Ball"),
         RigidBody::Dynamic,
         Restitution::new(1.0),
         Mesh3d(ball_resource.mesh.clone()),
@@ -103,21 +105,20 @@ fn handle_ball_oob(
 fn handle_ball_collision(
     mut commands: Commands,
     mut collisions: EventReader<Collision>,
-    ball: Query<Entity, With<Ball>>,
+    ball: Single<Entity, With<Ball>>,
     paddle: Single<Entity, With<player::Paddle>>,
 ) {
-    if let Ok(ball_entity) = ball.get_single() {
-        let paddle_entity = paddle.into_inner();
-        for Collision(contact) in collisions.read() {
-            if !contact.collision_started() {
-                continue;
-            }
-            if contact.entity1 != ball_entity && contact.entity1 != paddle_entity {
-                commands.entity(contact.entity1).despawn();
-            }
-            if contact.entity2 != ball_entity && contact.entity2 != paddle_entity {
-                commands.entity(contact.entity2).despawn();
-            }
+    let ball_entity = ball.into_inner();
+    let paddle_entity = paddle.into_inner();
+    for Collision(contact) in collisions.read() {
+        if !contact.collision_started() {
+            continue;
+        }
+        if contact.entity1 != ball_entity && contact.entity1 != paddle_entity {
+            commands.entity(contact.entity1).despawn();
+        }
+        if contact.entity2 != ball_entity && contact.entity2 != paddle_entity {
+            commands.entity(contact.entity2).despawn();
         }
     }
 }
