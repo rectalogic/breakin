@@ -35,7 +35,7 @@ pub(super) fn plugin(app: &mut App) {
 struct Player;
 
 #[derive(Component)]
-struct Paddle;
+pub(super) struct Paddle;
 
 #[derive(Component)]
 pub(super) struct PaddleHolder;
