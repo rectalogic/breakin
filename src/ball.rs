@@ -75,6 +75,7 @@ fn fire_ball(
         Name::new("Ball"),
         RigidBody::Dynamic,
         Restitution::new(1.0),
+        MaxLinearSpeed(5.0),
         Mesh3d(ball_resource.mesh.clone()),
         MeshMaterial3d(ball_resource.material.clone()),
         Collider::sphere(BALL_RADIUS),
@@ -105,20 +106,36 @@ fn handle_ball_oob(
 fn handle_ball_collision(
     mut commands: Commands,
     mut collisions: EventReader<Collision>,
-    ball: Single<Entity, With<Ball>>,
+    ball: Single<(Entity, &Transform), With<Ball>>,
     paddle: Single<Entity, With<player::Paddle>>,
 ) {
-    let ball_entity = ball.into_inner();
+    let (ball_entity, ball_transform) = ball.into_inner();
     let paddle_entity = paddle.into_inner();
+    const ACCELERATION: f32 = 0.2;
+    let mut impulse = ExternalImpulse::ZERO;
     for Collision(contact) in collisions.read() {
         if !contact.collision_started() {
             continue;
         }
+        let contact_data = contact.find_deepest_contact();
         if contact.entity1 != ball_entity && contact.entity1 != paddle_entity {
             commands.entity(contact.entity1).despawn();
+            if let Some(data) = contact_data {
+                impulse.apply_impulse(
+                    data.global_normal1(&Rotation(ball_transform.rotation)) * -ACCELERATION,
+                );
+            }
         }
         if contact.entity2 != ball_entity && contact.entity2 != paddle_entity {
             commands.entity(contact.entity2).despawn();
+            if let Some(data) = contact_data {
+                impulse.apply_impulse(
+                    data.global_normal2(&Rotation(ball_transform.rotation)) * -ACCELERATION,
+                );
+            }
         }
+    }
+    if impulse != ExternalImpulse::ZERO {
+        commands.entity(ball_entity).insert(impulse);
     }
 }
