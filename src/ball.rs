@@ -122,7 +122,7 @@ fn handle_ball_collision(
             commands.entity(contact.entity1).despawn();
             if let Some(data) = contact_data {
                 impulse.apply_impulse(
-                    data.global_normal1(&Rotation(ball_transform.rotation)) * -ACCELERATION,
+                    data.global_normal2(&Rotation(ball_transform.rotation)) * -ACCELERATION,
                 );
             }
         }
@@ -130,7 +130,7 @@ fn handle_ball_collision(
             commands.entity(contact.entity2).despawn();
             if let Some(data) = contact_data {
                 impulse.apply_impulse(
-                    data.global_normal2(&Rotation(ball_transform.rotation)) * -ACCELERATION,
+                    data.global_normal1(&Rotation(ball_transform.rotation)) * -ACCELERATION,
                 );
             }
         }
