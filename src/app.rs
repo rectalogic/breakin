@@ -4,7 +4,13 @@ use bevy::{DefaultPlugins, app::App, prelude::*};
 
 pub fn plugin(app: &mut App) {
     app.add_plugins((
-        DefaultPlugins,
+        DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "BreakIn".into(),
+                ..default()
+            }),
+            ..default()
+        }),
         PhysicsPlugins::default(),
         bricks::plugin,
         player::plugin,
