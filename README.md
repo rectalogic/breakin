@@ -6,6 +6,4 @@ Drag mouse to orbit the cube, spacebar to fire the ball.
 Then orbit to bounce the ball back again.
 
 
-
-https://github.com/user-attachments/assets/f2f0e250-b027-4fe6-875f-745370653b3b
-
+https://github.com/user-attachments/assets/c6442c11-ca4a-432f-98fd-6804721e1538
