@@ -118,19 +118,19 @@ fn handle_ball_collision(
             continue;
         }
         let contact_data = contact.find_deepest_contact();
-        if contact.entity1 != ball_entity && contact.entity1 != paddle_entity {
-            commands.entity(contact.entity1).despawn();
-            if let Some(data) = contact_data {
-                impulse.apply_impulse(
-                    data.global_normal2(&Rotation(ball_transform.rotation)) * -ACCELERATION,
-                );
-            }
-        }
-        if contact.entity2 != ball_entity && contact.entity2 != paddle_entity {
+        if contact.entity1 == ball_entity && contact.entity2 != paddle_entity {
             commands.entity(contact.entity2).despawn();
             if let Some(data) = contact_data {
                 impulse.apply_impulse(
                     data.global_normal1(&Rotation(ball_transform.rotation)) * -ACCELERATION,
+                );
+            }
+        }
+        if contact.entity2 == ball_entity && contact.entity1 != paddle_entity {
+            commands.entity(contact.entity1).despawn();
+            if let Some(data) = contact_data {
+                impulse.apply_impulse(
+                    data.global_normal2(&Rotation(ball_transform.rotation)) * -ACCELERATION,
                 );
             }
         }
